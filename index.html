@@ -87,6 +87,7 @@
       border-radius: 50%;
     }
 
+    /* Metric Grid */
     .metrics-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -124,6 +125,7 @@
     .val-yellow { color: var(--accent-yellow); }
     .val-green { color: var(--accent-green); }
 
+    /* Input Section */
     .section-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -205,6 +207,7 @@
       margin-left: 6px;
     }
 
+    /* Slider Container */
     .slider-container {
       margin: 16px 0;
       background: var(--input-bg);
@@ -259,6 +262,7 @@
     <span>Unit Standard: 1 kg = 2.20462 lbs</span>
   </div>
 
+  <!-- Key Metrics Output Grid -->
   <div class="metrics-grid">
     <div class="metric-card">
       <div class="metric-title">Total Shop Base Cost</div>
@@ -285,6 +289,7 @@
     </div>
   </div>
 
+  <!-- Input Parameters -->
   <div class="section-card">
     <div class="section-title-bar">
       <div class="section-title">⚙️ Cost Parameters Input</div>
@@ -359,12 +364,20 @@
       </div>
     </div>
 
-    <div class="sub-heading">3. Selling Price</div>
+    <div class="sub-heading">3. Pricing & Margins</div>
 
     <div class="input-row">
       <span class="input-label">Target Selling Price:</span>
       <div class="input-wrapper" style="border-color: var(--accent-green);">
-        <input type="number" id="in-selling-price" class="input-field" value="510" oninput="calculate()">
+        <input type="number" id="in-selling-price" class="input-field" value="510" oninput="onSellingPriceChange()">
+        <span class="input-unit">TK</span>
+      </div>
+    </div>
+
+    <div class="input-row">
+      <span class="input-label">Desired Shop Margin:</span>
+      <div class="input-wrapper" style="border-color: var(--accent-blue);">
+        <input type="number" id="in-desired-margin" class="input-field" value="14.68" oninput="onDesiredMarginChange()">
         <span class="input-unit">TK</span>
       </div>
     </div>
@@ -372,6 +385,8 @@
   </div>
 
   <script>
+    let isUpdating = false;
+
     function updateBlendSlider() {
       const polyPct = parseFloat(document.getElementById('in-poly-slider').value);
       const spandexPct = 100 - polyPct;
@@ -380,7 +395,7 @@
       calculate();
     }
 
-    function calculate() {
+    function calculateBaseCosts() {
       const polyPriceLb = parseFloat(document.getElementById('in-poly-price').value) || 0;
       const spandexPriceKg = parseFloat(document.getElementById('in-spandex-price').value) || 0;
       
@@ -394,20 +409,19 @@
       const dyeFee = parseFloat(document.getElementById('in-dye-fee').value) || 0;
       const freight = parseFloat(document.getElementById('in-freight').value) || 0;
 
-      const sellingPrice = parseFloat(document.getElementById('in-selling-price').value) || 0;
-
       const polyPriceKg = polyPriceLb * 2.20462;
       const blendRawYarnCost = (polyPriceKg * polyRatio) + (spandexPriceKg * spandexRatio);
 
       const totalYarnNeeded = 1 / ((1 - knitLoss) * (1 - dyeLoss));
       const totalYarnCostPerKgFabric = blendRawYarnCost * totalYarnNeeded;
 
-      const totalShopCost = totalYarnCostPerKgFabric + knitFee + dyeFee + freight;
+      return totalYarnCostPerKgFabric + knitFee + dyeFee + freight;
+    }
+
+    function updateOutputs(totalShopCost, sellingPrice, shopMargin) {
+      const knitFee = parseFloat(document.getElementById('in-knit-fee').value) || 0;
       const cashOutCost = totalShopCost - knitFee;
-
-      const shopMargin = sellingPrice - totalShopCost;
       const shopMarginPct = sellingPrice > 0 ? (shopMargin / sellingPrice) * 100 : 0;
-
       const totalProfit = knitFee + shopMargin;
 
       document.getElementById('out-shop-cost').innerText = totalShopCost.toFixed(2) + ' TK';
@@ -418,8 +432,49 @@
       marginElem.className = 'metric-value ' + (shopMargin >= 0 ? 'val-green' : 'val-yellow');
 
       document.getElementById('out-shop-margin-pct').innerText = shopMarginPct.toFixed(1) + '% Margin';
-
       document.getElementById('out-family-income').innerText = totalProfit.toFixed(2) + ' TK';
+    }
+
+    function calculate() {
+      if (isUpdating) return;
+      isUpdating = true;
+
+      const totalShopCost = calculateBaseCosts();
+      const sellingPrice = parseFloat(document.getElementById('in-selling-price').value) || 0;
+      const shopMargin = sellingPrice - totalShopCost;
+
+      document.getElementById('in-desired-margin').value = shopMargin.toFixed(2);
+      updateOutputs(totalShopCost, sellingPrice, shopMargin);
+
+      isUpdating = false;
+    }
+
+    function onSellingPriceChange() {
+      if (isUpdating) return;
+      isUpdating = true;
+
+      const sellingPrice = parseFloat(document.getElementById('in-selling-price').value) || 0;
+      const totalShopCost = calculateBaseCosts();
+      const shopMargin = sellingPrice - totalShopCost;
+
+      document.getElementById('in-desired-margin').value = shopMargin.toFixed(2);
+      updateOutputs(totalShopCost, sellingPrice, shopMargin);
+
+      isUpdating = false;
+    }
+
+    function onDesiredMarginChange() {
+      if (isUpdating) return;
+      isUpdating = true;
+
+      const desiredMargin = parseFloat(document.getElementById('in-desired-margin').value) || 0;
+      const totalShopCost = calculateBaseCosts();
+      const sellingPrice = totalShopCost + desiredMargin;
+
+      document.getElementById('in-selling-price').value = sellingPrice.toFixed(2);
+      updateOutputs(totalShopCost, sellingPrice, desiredMargin);
+
+      isUpdating = false;
     }
 
     function resetDefaults() {
