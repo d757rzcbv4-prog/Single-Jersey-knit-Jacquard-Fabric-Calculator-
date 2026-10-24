@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jacquard Fabric Costing & Profit Calculator - Bangladesh</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        slateDark: '#0f172a',
+                        cardBg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for dark table */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        input[type=range] {
+            accent-color: #22c55e;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-12">
+
+    <!-- Top Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
+                    <i class="fa-solid fa-calculator text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Jacquard Fabric Costing Tool</h1>
+                    <p class="text-xs text-slate-400">Single Jersey Poly-Spandex | Shop & Factory Combined Calculator (TK)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs text-slate-300">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Unit Standard: 1 kg = 2.20462 lbs</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+
+        <!-- Top Overview Highlights -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition-all">
+                <div class="text-xs font-medium text-slate-400 mb-1">Total Shop Base Cost</div>
+                <div class="text-2xl font-extrabold text-white" id="stat-base-cost">0.00 TK</div>
+                <div class="text-[11px] text-slate-500 mt-1">Includes all yarn + loss + fees</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition-all">
+                <div class="text-xs font-medium text-slate-400 mb-1">Cash Out-of-Pocket</div>
+                <div class="text-2xl font-extrabold text-amber-400" id="stat-cash-cost">0.00 TK</div>
+                <div class="text-[11px] text-slate-500 mt-1">Excludes internal knitting fee</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition-all">
+                <div class="text-xs font-medium text-slate-400 mb-1">Shop Net Margin / kg</div>
+                <div class="text-2xl font-extrabold text-emerald-400" id="stat-shop-margin">0.00 TK</div>
+                <div class="text-[11px] text-emerald-500/80 mt-1 font-medium" id="stat-shop-margin-pct">0.0% Margin</div>
+            </div>
+            <div class="bg-slate-900 border border-emerald-900/40 bg-emerald-950/10 rounded-2xl p-4 shadow-sm hover:border-emerald-800/60 transition-all">
+                <div class="text-xs font-medium text-emerald-400 mb-1">Total Family Income / kg</div>
+                <div class="text-2xl font-extrabold text-emerald-300" id="stat-family-income">0.00 TK</div>
+                <div class="text-[11px] text-emerald-400/80 mt-1">Factory Fee + Shop Profit</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid: Inputs Left, Analysis Right -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Inputs Panel (5 cols) -->
+            <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-emerald-400"></i> Cost Parameters Input
+                    </h2>
+                    <button onclick="resetDefaults()" class="text-xs text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+                    </button>
+                </div>
+
+                <!-- 1. Raw Materials Section -->
+                <div class="space-y-4">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Raw Materials & Blend</div>
+                    
+                    <!-- Poly Price -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">150D Polyester (TK/lb):</label>
+                        <div class="relative">
+                            <input type="number" id="input-poly-price" value="101" step="0.5" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-semibold pr-8">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">TK</span>
+                        </div>
+                    </div>
+
+                    <!-- Spandex Price -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">30D Spandex (TK/kg):</label>
+                        <div class="relative">
+                            <input type="number" id="input-spandex-price" value="700" step="5" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-semibold pr-8">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">TK</span>
+                        </div>
+                    </div>
+
+                    <!-- Blend Slider -->
+                    <div class="space-y-2 bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-medium">
+                            <span class="text-emerald-400 font-semibold">Polyester: <span id="blend-poly-val">95</span>%</span>
+                            <span class="text-purple-400 font-semibold">Spandex: <span id="blend-spandex-val">5</span>%</span>
+                        </div>
+                        <input type="range" id="input-blend-poly" min="70" max="100" value="95" step="1" oninput="syncBlend(this.value)" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- 2. Manufacturing & Process Loss -->
+                <div class="space-y-4 border-t border-slate-800 pt-4">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">2. Conversion & Processing Fees</div>
+
+                    <!-- Knitting Charge -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">Knitting Charge (TK/kg):</label>
+                        <div class="relative">
+                            <input type="number" id="input-knit-charge" value="150" step="1" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-semibold pr-8">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">TK</span>
+                        </div>
+                    </div>
+
+                    <!-- Dyeing Charge -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">Dyeing Charge (TK/kg):</label>
+                        <div class="relative">
+                            <input type="number" id="input-dye-charge" value="65" step="1" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-semibold pr-8">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">TK</span>
+                        </div>
+                    </div>
+
+                    <!-- Freight Charge -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">Freight/Transport (TK/kg):</label>
+                        <div class="relative">
+                            <input type="number" id="input-freight-charge" value="10" step="1" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-semibold pr-8">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">TK</span>
+                        </div>
+                    </div>
+
+                    <!-- Wastage Percentages -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] font-medium text-slate-400 block mb-1">Knitting Loss %:</label>
+                            <input type="number" id="input-knit-loss" value="4" step="0.5" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-medium text-slate-400 block mb-1">Dyeing Loss %:</label>
+                            <input type="number" id="input-dye-loss" value="5" step="0.5" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Sales & Shop Overhead -->
+                <div class="space-y-4 border-t border-slate-800 pt-4">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">3. Shop Sales & Fixed Expenses</div>
+
+                    <!-- Target Price -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">Target Price (TK/kg):</label>
+                        <div class="relative">
+                            <input type="number" id="input-target-price" value="510" step="5" oninput="calculate()" class="w-full bg-slate-800 border border-emerald-500/50 rounded-xl px-3 py-2 text-sm text-emerald-400 focus:outline-none focus:border-emerald-500 font-bold pr-8">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">TK</span>
+                        </div>
+                    </div>
+
+                    <!-- Shop Overhead -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">Monthly Shop Overhead:</label>
+                        <div class="relative">
+                            <input type="number" id="input-overhead" value="100000" step="5000" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-semibold pr-8">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">TK</span>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Targeted Volume -->
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <label class="text-xs font-medium text-slate-300">Target Monthly Sales Volume:</label>
+                        <div class="relative">
+                            <input type="number" id="input-monthly-volume" value="3000" step="250" oninput="calculate()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-semibold pr-10">
+                            <span class="absolute right-2.5 top-2.5 text-xs text-slate-500">kg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Cost Breakdown & Enterprise Income (7 cols) -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- Detailed Breakdown Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <h2 class="text-base font-semibold text-white border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-emerald-400"></i> Detailed Unit Cost Breakdown
+                        </span>
+                        <span class="text-xs font-normal text-slate-400">Per 1 Finished Kg Fabric</span>
+                    </h2>
+
+                    <div class="mt-4 space-y-3">
+                        <!-- Raw Yarn Calculations -->
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/60">
+                            <div>
+                                <div class="text-slate-200 font-medium">150D Poly Raw Cost (<span id="out-poly-converted">222.67</span> TK/kg)</div>
+                                <div class="text-[11px] text-slate-500">101 TK/lb × 2.20462 × <span id="out-poly-pct">95</span>%</div>
+                            </div>
+                            <div class="font-mono text-slate-300 font-semibold" id="out-poly-share">211.54 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/60">
+                            <div>
+                                <div class="text-slate-200 font-medium">30D Spandex Raw Cost</div>
+                                <div class="text-[11px] text-slate-500"><span id="out-spandex-price">700</span> TK/kg × <span id="out-spandex-pct">5</span>%</div>
+                            </div>
+                            <div class="font-mono text-slate-300 font-semibold" id="out-spandex-share">35.00 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/60 bg-slate-800/30 px-2 rounded-lg">
+                            <div class="text-slate-300 font-medium">Raw Yarn Blend Subtotal</div>
+                            <div class="font-mono text-white font-bold" id="out-raw-blend-subtotal">246.54 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/60">
+                            <div>
+                                <div class="text-slate-200 font-medium">Process Loss Adjustment</div>
+                                <div class="text-[11px] text-slate-500">+<span id="out-knit-loss-val">4</span>% Knit Loss + <span id="out-dye-loss-val">5</span>% Dyeing Loss</div>
+                            </div>
+                            <div class="font-mono text-amber-400 font-semibold" id="out-loss-amount">+23.79 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/60 bg-emerald-950/20 px-2 rounded-lg border-emerald-900/30">
+                            <div class="text-emerald-300 font-semibold">Effective Finished Yarn Cost</div>
+                            <div class="font-mono text-emerald-400 font-bold" id="out-effective-yarn">270.33 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/60">
+                            <div class="text-slate-300">Knitting Charge (Factory Revenue)</div>
+                            <div class="font-mono text-slate-300 font-semibold" id="out-knit-charge-display">150.00 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800/60">
+                            <div class="text-slate-300">Dyeing & Finishing Charge</div>
+                            <div class="font-mono text-slate-300 font-semibold" id="out-dye-charge-display">65.00 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-slate-800">
+                            <div class="text-slate-300">Freight & Transport Charge</div>
+                            <div class="font-mono text-slate-300 font-semibold" id="out-freight-display">10.00 TK</div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm pt-2 bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                            <span class="font-bold text-white">TOTAL SHOP FABRIC BASE COST:</span>
+                            <span class="font-mono text-lg font-black text-white" id="out-total-base-cost">495.33 TK/kg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Projection & Break-Even Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+                    <h2 class="text-base font-semibold text-white border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-emerald-400"></i> Monthly Volume & Profit Projections
+                        </span>
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-slate-800/50 border border-slate-800 p-4 rounded-xl space-y-1">
+                            <div class="text-xs text-slate-400">Break-Even Sales Volume</div>
+                            <div class="text-2xl font-bold text-amber-400" id="out-breakeven-kg">0 kg</div>
+                            <div class="text-[11px] text-slate-500">Target to clear <span id="out-overhead-display">1,00,000</span> TK fixed overhead</div>
+                        </div>
+
+                        <div class="bg-slate-800/50 border border-slate-800 p-4 rounded-xl space-y-1">
+                            <div class="text-xs text-slate-400">Monthly Shop Net Profit (<span id="out-target-vol-display">3,000</span> kg)</div>
+                            <div class="text-2xl font-bold text-emerald-400" id="out-shop-monthly-net">0 TK</div>
+                            <div class="text-[11px] text-slate-500">After deducting shop rent & staff expenses</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-xl flex items-center justify-between">
+                        <div>
+                            <div class="text-xs text-emerald-400 font-semibold">Total Combined Family Monthly Income</div>
+                            <div class="text-[11px] text-slate-400">Factory Knitting Revenue + Shop Net Profit at <span id="out-target-vol-display-2">3,000</span> kg</div>
+                        </div>
+                        <div class="text-2xl font-black text-emerald-300" id="out-family-monthly-total">0 TK</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Tier Pricing Matrix Table -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-2">
+                <div>
+                    <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table-cells text-emerald-400"></i> Selling Price Tier Comparison Matrix
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Evaluates profitability & break-even volumes across 10 TK/kg selling price intervals</p>
+                </div>
+                <div class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300">
+                    Base Cost: <span id="matrix-base-cost" class="font-bold text-white">495.33 TK</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto mt-4">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 bg-slate-950/50">
+                            <th class="py-3 px-3 font-semibold">Selling Price</th>
+                            <th class="py-3 px-3 font-semibold">Shop Profit / kg</th>
+                            <th class="py-3 px-3 font-semibold">Shop Margin %</th>
+                            <th class="py-3 px-3 font-semibold">Monthly Break-Even (kg)</th>
+                            <th class="py-3 px-3 font-semibold">Family Total Income / kg</th>
+                            <th class="py-3 px-3 font-semibold text-right">Shop Net Monthly (<span class="vol-header">3,000</span> kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pricing-matrix-body" class="divide-y divide-slate-800/60 font-mono">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Interactive Script -->
+    <script>
+        // Constants
+        const LBS_TO_KG = 2.20462;
+
+        function syncBlend(polyVal) {
+            const poly = parseFloat(polyVal);
+            const spandex = 100 - poly;
+            document.getElementById('blend-poly-val').innerText = poly;
+            document.getElementById('blend-spandex-val').innerText = spandex;
+            calculate();
+        }
+
+        function resetDefaults() {
+            document.getElementById('input-poly-price').value = 101;
+            document.getElementById('input-spandex-price').value = 700;
+            document.getElementById('input-blend-poly').value = 95;
+            document.getElementById('blend-poly-val').innerText = 95;
+            document.getElementById('blend-spandex-val').innerText = 5;
+            document.getElementById('input-knit-charge').value = 150;
+            document.getElementById('input-dye-charge').value = 65;
+            document.getElementById('input-freight-charge').value = 10;
+            document.getElementById('input-knit-loss').value = 4;
+            document.getElementById('input-dye-loss').value = 5;
+            document.getElementById('input-target-price').value = 510;
+            document.getElementById('input-overhead').value = 100000;
+            document.getElementById('input-monthly-volume').value = 3000;
+            calculate();
+        }
+
+        function calculate() {
+            // Inputs
+            const polyPriceLbs = parseFloat(document.getElementById('input-poly-price').value) || 0;
+            const spandexPriceKg = parseFloat(document.getElementById('input-spandex-price').value) || 0;
+            const polyPct = parseFloat(document.getElementById('input-blend-poly').value) || 95;
+            const spandexPct = 100 - polyPct;
+
+            const knitCharge = parseFloat(document.getElementById('input-knit-charge').value) || 0;
+            const dyeCharge = parseFloat(document.getElementById('input-dye-charge').value) || 0;
+            const freightCharge = parseFloat(document.getElementById('input-freight-charge').value) || 0;
+
+            const knitLossPct = parseFloat(document.getElementById('input-knit-loss').value) || 0;
+            const dyeLossPct = parseFloat(document.getElementById('input-dye-loss').value) || 0;
+
+            const targetPrice = parseFloat(document.getElementById('input-target-price').value) || 0;
+            const monthlyOverhead = parseFloat(document.getElementById('input-overhead').value) || 0;
+            const monthlyVol = parseFloat(document.getElementById('input-monthly-volume').value) || 0;
+
+            // Calculations
+            const polyPriceKg = polyPriceLbs * LBS_TO_KG;
+            const polyShare = polyPriceKg * (polyPct / 100);
+            const spandexShare = spandexPriceKg * (spandexPct / 100);
+            const rawBlendSubtotal = polyShare + spandexShare;
+
+            // Loss Adjustments
+            const knitLossFactor = 1 - (knitLossPct / 100);
+            const dyeLossFactor = 1 - (dyeLossPct / 100);
+            const effectiveYarnCost = rawBlendSubtotal / (knitLossFactor * dyeLossFactor);
+            const lossAmount = effectiveYarnCost - rawBlendSubtotal;
+
+            // Manufacturing Costs
+            const totalBaseCost = effectiveYarnCost + knitCharge + dyeCharge + freightCharge;
+            const cashOutCost = effectiveYarnCost + dyeCharge + freightCharge; // Excludes internal factory knitting charge
+
+            // Margins
+            const shopMarginKg = targetPrice - totalBaseCost;
+            const shopMarginPct = targetPrice > 0 ? (shopMarginKg / targetPrice) * 100 : 0;
+            const familyIncomeKg = knitCharge + shopMarginKg;
+
+            // Monthly Projections
+            const breakEvenKg = shopMarginKg > 0 ? Math.ceil(monthlyOverhead / shopMarginKg) : Infinity;
+            const shopNetMonthly = (shopMarginKg * monthlyVol) - monthlyOverhead;
+            const familyMonthlyTotal = (knitCharge * monthlyVol) + shopNetMonthly;
+
+            // Update UI Elements
+            document.getElementById('stat-base-cost').innerText = totalBaseCost.toFixed(2) + ' TK';
+            document.getElementById('stat-cash-cost').innerText = cashOutCost.toFixed(2) + ' TK';
+            
+            const shopMarginElem = document.getElementById('stat-shop-margin');
+            shopMarginElem.innerText = (shopMarginKg >= 0 ? '+' : '') + shopMarginKg.toFixed(2) + ' TK';
+            shopMarginElem.className = 'text-2xl font-extrabold ' + (shopMarginKg >= 0 ? 'text-emerald-400' : 'text-red-400');
+
+            document.getElementById('stat-shop-margin-pct').innerText = shopMarginPct.toFixed(1) + '% Margin';
+            document.getElementById('stat-family-income').innerText = familyIncomeKg.toFixed(2) + ' TK';
+
+            // Detailed Breakdown Panel
+            document.getElementById('out-poly-converted').innerText = polyPriceKg.toFixed(2);
+            document.getElementById('out-poly-pct').innerText = polyPct;
+            document.getElementById('out-poly-share').innerText = polyShare.toFixed(2) + ' TK';
+
+            document.getElementById('out-spandex-price').innerText = spandexPriceKg.toFixed(0);
+            document.getElementById('out-spandex-pct').innerText = spandexPct;
+            document.getElementById('out-spandex-share').innerText = spandexShare.toFixed(2) + ' TK';
+
+            document.getElementById('out-raw-blend-subtotal').innerText = rawBlendSubtotal.toFixed(2) + ' TK';
+            document.getElementById('out-knit-loss-val').innerText = knitLossPct;
+            document.getElementById('out-dye-loss-val').innerText = dyeLossPct;
+            document.getElementById('out-loss-amount').innerText = '+' + lossAmount.toFixed(2) + ' TK';
+            document.getElementById('out-effective-yarn').innerText = effectiveYarnCost.toFixed(2) + ' TK';
+
+            document.getElementById('out-knit-charge-display').innerText = knitCharge.toFixed(2) + ' TK';
+            document.getElementById('out-dye-charge-display').innerText = dyeCharge.toFixed(2) + ' TK';
+            document.getElementById('out-freight-display').innerText = freightCharge.toFixed(2) + ' TK';
+            document.getElementById('out-total-base-cost').innerText = totalBaseCost.toFixed(2) + ' TK/kg';
+
+            // Monthly Projections
+            document.getElementById('out-breakeven-kg').innerText = isFinite(breakEvenKg) && breakEvenKg > 0 ? breakEvenKg.toLocaleString() + ' kg' : 'N/A';
+            document.getElementById('out-overhead-display').innerText = monthlyOverhead.toLocaleString();
+            
+            const shopNetMonthlyElem = document.getElementById('out-shop-monthly-net');
+            shopNetMonthlyElem.innerText = (shopNetMonthly >= 0 ? '+' : '') + Math.round(shopNetMonthly).toLocaleString() + ' TK';
+            shopNetMonthlyElem.className = 'text-2xl font-bold ' + (shopNetMonthly >= 0 ? 'text-emerald-400' : 'text-red-400');
+
+            document.getElementById('out-target-vol-display').innerText = monthlyVol.toLocaleString();
+            document.getElementById('out-target-vol-display-2').innerText = monthlyVol.toLocaleString();
+            document.querySelectorAll('.vol-header').forEach(el => el.innerText = monthlyVol.toLocaleString());
+            document.getElementById('out-family-monthly-total').innerText = Math.round(familyMonthlyTotal).toLocaleString() + ' TK';
+
+            document.getElementById('matrix-base-cost').innerText = totalBaseCost.toFixed(2) + ' TK';
+
+            // Render Matrix Table
+            renderPricingMatrix(totalBaseCost, knitCharge, monthlyOverhead, monthlyVol, targetPrice);
+        }
+
+        function renderPricingMatrix(baseCost, knitCharge, overhead, volume, currentTargetPrice) {
+            const tbody = document.getElementById('pricing-matrix-body');
+            tbody.innerHTML = '';
+
+            const prices = [480, 490, 500, 510, 520, 530, 540, 550, 560];
+
+            prices.forEach(price => {
+                const shopProfit = price - baseCost;
+                const marginPct = (shopProfit / price) * 100;
+                const breakEven = shopProfit > 0 ? Math.ceil(overhead / shopProfit) : 'N/A';
+                const familyIncome = knitCharge + shopProfit;
+                const shopNetMonthly = (shopProfit * volume) - overhead;
+
+                const isCurrent = Math.abs(price - currentTargetPrice) < 2.5;
+
+                const tr = document.createElement('tr');
+                tr.className = isCurrent ? 'bg-emerald-950/40 border-l-4 border-l-emerald-500 font-bold' : 'hover:bg-slate-800/40 transition-colors';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-3 text-white">
+                        ${price} TK/kg
+                        ${isCurrent ? '<span class="ml-1 text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded uppercase">Current</span>' : ''}
+                    </td>
+                    <td class="py-3 px-3 ${shopProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}">
+                        ${shopProfit >= 0 ? '+' : ''}${shopProfit.toFixed(2)} TK
+                    </td>
+                    <td class="py-3 px-3 text-slate-300">
+                        ${marginPct.toFixed(1)}%
+                    </td>
+                    <td class="py-3 px-3 text-amber-400">
+                        ${typeof breakEven === 'number' ? breakEven.toLocaleString() + ' kg' : 'N/A'}
+                    </td>
+                    <td class="py-3 px-3 text-emerald-300">
+                        ${familyIncome.toFixed(2)} TK
+                    </td>
+                    <td class="py-3 px-3 text-right font-bold ${shopNetMonthly >= 0 ? 'text-emerald-400' : 'text-red-400'}">
+                        ${shopNetMonthly >= 0 ? '+' : ''}${Math.round(shopNetMonthly).toLocaleString()} TK
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            calculate();
+        };
+    </script>
+</body>
+</html>
